@@ -1,0 +1,16 @@
+[package]
+name = "gliese-os"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "GlieseWM on Metal OS system calls: the compositor's Host and loop (the screen task), and the client transport programs use"
+
+[dependencies]
+gliese-proto = { path = "../gliese-proto" }
+gliese-client = { path = "../gliese-client" }
+gliese-server = { path = "../gliese-server" }
+# the OS Makefile points this at its own copy when it builds a desktop
+metal-driver-rt = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "9a19fa2" }
+
+[lints]
+workspace = true

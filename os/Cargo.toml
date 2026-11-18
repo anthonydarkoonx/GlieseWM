@@ -1,0 +1,22 @@
+# GlieseWM's programs as Metal OS programs (`.map` packages). Its own workspace: `no_std` position-independent programs for
+# aarch64-unknown-none-softfloat, built by metal-os's Makefile (`make run-window DESKTOP=<this repository>`), not by
+# `cargo test --workspace` (the logic is in ../crates and tested there).
+[package]
+name = "gliese-programs"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+
+[workspace]
+
+[dependencies]
+# the OS Makefile points these at its own copies
+metal-programs = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "9a19fa2" }
+gliese-agent = { path = "../crates/gliese-agent" }
+gliese-os = { path = "../crates/gliese-os" }
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+codegen-units = 1

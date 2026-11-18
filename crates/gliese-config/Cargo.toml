@@ -1,0 +1,12 @@
+[package]
+name = "gliese-config"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The gliese.conf parser: sections, variables, binds, submaps, window rules, key names; errors with line and column"
+
+[lints]
+workspace = true
+
+[dependencies]
+gliese-layout = { path = "../gliese-layout" }

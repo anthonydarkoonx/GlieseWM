@@ -1,0 +1,18 @@
+[package]
+name = "gliese-agent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "What gliesed does (the desktop-role program): upload gliese.conf and reload it when it changes, start programs for exec"
+
+[dependencies]
+gliese-client = { path = "../gliese-client" }
+gliese-config = { path = "../gliese-config" }
+gliese-proto = { path = "../gliese-proto" }
+
+[dev-dependencies]
+gliese-server = { path = "../gliese-server", features = ["sim"] }
+gliese-core = { path = "../gliese-core" }
+
+[lints]
+workspace = true

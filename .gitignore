@@ -1,0 +1,4 @@
+/target
+/target-metal-os
+/target-metal-os-programs
+**/out/

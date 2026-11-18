@@ -1,0 +1,9 @@
+[package]
+name = "gliese-proto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "GlieseWM's window protocol: ops, events, word packing, the session page and its event ring"
+
+[lints]
+workspace = true

@@ -1,0 +1,8 @@
+id = gliesed
+name = GlieseWM agent
+version = 0.1.0
+heap_pages = 256
+class = background
+role = desktop
+permission = files
+ability = main service bin/gliesed

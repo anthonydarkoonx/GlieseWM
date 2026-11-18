@@ -1,0 +1,20 @@
+[package]
+name = "gliese-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "GlieseWM's window manager: workspaces, tiling with gaps, floating, binds and submaps, dispatchers, window rules; a gliese-server Policy"
+
+[dependencies]
+gliese-config = { path = "../gliese-config" }
+gliese-layout = { path = "../gliese-layout" }
+gliese-proto = { path = "../gliese-proto" }
+gliese-server = { path = "../gliese-server" }
+
+[dev-dependencies]
+gliese-config = { path = "../gliese-config" }
+gliese-server = { path = "../gliese-server", features = ["sim"] }
+gliese-client = { path = "../gliese-client" }
+
+[lints]
+workspace = true

@@ -1,0 +1,12 @@
+[package]
+name = "gliese-client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "The program side of GlieseWM's window protocol: connect, make windows, draw, read events"
+
+[dependencies]
+gliese-proto = { path = "../gliese-proto" }
+
+[lints]
+workspace = true
