@@ -17,7 +17,9 @@ The design and the phases are in [`PLAN.md`](PLAN.md).
 | `crates/gliese-os` | GlieseWM on Metal OS system calls: the compositor's `Host`, the screen task's loop (display requests, `INPUT_POLL`, `GPU_FLUSH2`), and `OsTransport`, the client side programs use. The only crate with `unsafe` | done; links into the OS image |
 | `crates/metal-desktop-boot` | The desktop contract's entry point, `metal_desktop_run` | done |
 | `crates/gliese-agent` | What `gliesed` does: upload `gliese.conf` (or the built-in default), reload it when it changes or on `reload`, start programs for `exec` (or ask a running one for a new window), `exec-once` | done, 9 end-to-end tests |
-| `os/` | The Metal OS programs: `gliesed` (the desktop role, no window; started at boot) | `gliesed` done; the terminal is PLAN.md P7 |
+| `crates/gliese-term` | The terminal's screen: lines with scrollback, a small ANSI subset (colours, clear), drawn with metal-gfx's font | done, tested |
+| `crates/gliese-shell` | The shell: line editing, history, 24 built-ins, pipes and `>`/`>>` between them, `nano` (metal-edit), running programs | done, tested |
+| `os/` | The Metal OS programs: `gliesed` (the desktop role, no window; started at boot) and `terminal` (Super+Enter; one program, a window per Super+Enter, runs programs through `permission = spawn`) | done; both run on QEMU |
 
 ## Building and testing
 
@@ -36,8 +38,9 @@ The metal-os Makefile builds `metal-desktop-boot` and links it into the screen t
 cd ../metal-os && make run-window DESKTOP=../GlieseWM
 ```
 
-That builds into `target-metal-os/` and `target-metal-os-programs/` here, signs `gliesed` into the system image and installs and
-starts it by default. Until the terminal exists (PLAN.md P7), Super+Enter logs `cannot start 'terminal'`.
+That builds into `target-metal-os/` and `target-metal-os-programs/` here, signs `gliesed` and `terminal` into the system image and
+installs them by default (`gliesed` is started at boot). Super+Enter opens a terminal. Running programs from it needs metal-os's
+`permission = spawn` (its `spawn-permission` branch until that is merged).
 
 ## Your config
 

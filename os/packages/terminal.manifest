@@ -1,0 +1,13 @@
+id = terminal
+name = Terminal
+version = 0.1.0
+heap_pages = 4096
+threads = 4
+class = interactive
+permission = display
+permission = allfiles
+permission = shell
+permission = network
+permission = spawn
+spawn_pages = 4096
+ability = main ui bin/terminal

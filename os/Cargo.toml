@@ -14,6 +14,10 @@ license = "Apache-2.0 OR MIT"
 metal-programs = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "9a19fa2" }
 gliese-agent = { path = "../crates/gliese-agent" }
 gliese-os = { path = "../crates/gliese-os" }
+gliese-client = { path = "../crates/gliese-client" }
+gliese-proto = { path = "../crates/gliese-proto" }
+gliese-shell = { path = "../crates/gliese-shell" }
+gliese-term = { path = "../crates/gliese-term" }
 
 [profile.release]
 panic = "abort"
