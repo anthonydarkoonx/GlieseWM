@@ -6,7 +6,7 @@ license.workspace = true
 description = "GlieseWM's terminal screen: logical lines with scrollback, a small ANSI subset, drawn with metal-gfx's bitmap font"
 
 [dependencies]
-metal-gfx = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "9a19fa2" }
+metal-gfx = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "6406422" }
 
 [lints]
 workspace = true

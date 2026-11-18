@@ -1,6 +1,6 @@
 # OS change: `permission = spawn`
 
-**Applied to metal-os on 2026-11-18** (uncommitted working tree, on top of `9a19fa2`), at the user's request. This file is the
+**Applied to metal-os on 2026-11-18** (commit `6406422`, merged into `main`), at the user's request. This file is the
 design record; metal-os `docs/PROGRAMS.md`, *Starting programs*, is the reference. Differences from the proposal below: the test
 manager's budget went from 500 to 800 pages, and `prog info` prints the permission. `mkmap.py` needed no change.
 

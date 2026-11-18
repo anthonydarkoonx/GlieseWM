@@ -8,7 +8,7 @@ description = "GlieseWM's side of the Metal OS desktop contract (metal-os docs/D
 [dependencies]
 gliese-core = { path = "../gliese-core" }
 gliese-os = { path = "../gliese-os" }
-metal-driver-rt = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "9a19fa2" }
+metal-driver-rt = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "6406422" }
 
 [lints]
 workspace = true

@@ -44,7 +44,11 @@ name = "gliese-programs"
 version = "0.1.0"
 dependencies = [
  "gliese-agent",
+ "gliese-client",
  "gliese-os",
+ "gliese-proto",
+ "gliese-shell",
+ "gliese-term",
  "metal-programs",
 ]
 
@@ -62,24 +66,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "gliese-shell"
+version = "0.1.0"
+dependencies = [
+ "gliese-config",
+ "gliese-proto",
+ "gliese-term",
+ "metal-edit",
+]
+
+[[package]]
+name = "gliese-term"
+version = "0.1.0"
+dependencies = [
+ "metal-gfx",
+]
+
+[[package]]
 name = "metal-driver-rt"
 version = "0.1.0"
+source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
 
 [[package]]
 name = "metal-ed25519"
 version = "0.1.0"
+source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
+
+[[package]]
+name = "metal-edit"
+version = "0.1.0"
+source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
 
 [[package]]
 name = "metal-gfx"
 version = "0.1.0"
+source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
 
 [[package]]
 name = "metal-loader"
 version = "0.1.0"
+source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
 
 [[package]]
 name = "metal-map"
 version = "0.1.0"
+source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
 dependencies = [
  "metal-ed25519",
 ]
@@ -87,6 +118,7 @@ dependencies = [
 [[package]]
 name = "metal-programs"
 version = "0.1.0"
+source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
 dependencies = [
  "metal-loader",
  "metal-map",

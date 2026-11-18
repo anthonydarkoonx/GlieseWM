@@ -11,7 +11,7 @@ license = "Apache-2.0 OR MIT"
 
 [dependencies]
 # the OS Makefile points these at its own copies
-metal-programs = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "9a19fa2" }
+metal-programs = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "6406422" }
 gliese-agent = { path = "../crates/gliese-agent" }
 gliese-os = { path = "../crates/gliese-os" }
 gliese-client = { path = "../crates/gliese-client" }
