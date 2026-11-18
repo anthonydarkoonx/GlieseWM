@@ -44,8 +44,8 @@ Revised 2026-11-18. **Status:** P0 (scaffold), P1 (layouts and gaps), P2 (config
 | A program with `permission = files` sees its own `/data/programdata/<id>` as `/data` | `docs/PROGRAMS.md` |
 | GPU: `GPU_INFO` (32) returns `w \| h << 32`; `GPU_FLUSH2` (34) presents two rectangles, each `x \| y<<16 \| w<<32 \| h<<48` | `libs/metal-driver-rt/src/proto.rs` |
 | Input: `INPUT_POLL` (71) returns up to two event words: `kind` (KEY=1, MOVE=2 absolute 0..32767, BUTTON=3 with 1 left / 2 right / 3 middle, WHEEL), a 16-bit code, and a 32-bit value. Key numbers are PC/AT set 1 (A=30, Super=125/126) | `proto.rs` |
-| Shared memory and wake-ups: `SHM_CREATE` 37, `SHM_INFO` 38, `MEM_MAP` 4, `CAP_GRANT` 5, `CAP_REVOKE` 6, `WAIT_WORD` 32, `WAKE_WORD` 33 | `docs/ABI.md` |
-| Time, tasks and power: `CLOCK` 34, `SLEEP_US` 44, `SYSINFO` pages 3 (task alive) and 5 (a task's program), `POWER` 42 | `docs/ABI.md` |
+| Shared memory and wake-ups: `SHM_CREATE` 37, `SHM_INFO` 38, `MEM_MAP` 4, `CAP_GRANT` 5, `CAP_REVOKE` 6, `WAIT_WORD` 32, `WAKE_WORD` 33. Since metal-os `335ff8f` a *program* may `CAP_GRANT` only into its own program, programs it started and its parent (anything else: `-1`); boot-time tasks, which includes the compositor in the screen task, are not restricted, so the compositor still grants session pages and buffers to any client. Client programs must not grant to each other or to the compositor | `docs/ABI.md` |
+| Time, tasks and power: `CLOCK` 34, `SLEEP_US` 44, `SYSINFO` pages 3 (task alive) and 5 (a task's program), `POWER` 42. Since metal-os `1aa9b5d` `SYSINFO` pages 10, 11, 13 and 14 need an `Admin` capability; 3 and 5 stay open | `docs/ABI.md` |
 
 So GlieseWM's display protocol is its own. It must only answer op byte 97 the way the manager expects, and it reserves
 op bytes 96..=99 for the manager.
@@ -449,3 +449,7 @@ Open:
    program inside it, which is extra work. My recommendation is `/data/bin` (or `/system/bin`) for CLI programs.
 2. **The OS change's QEMU check.** `make test` (or the `qemu-test` part of it) runs the new `progctl` check. It has
    not been run yet.
+
+## OS hardening after the pinned revision
+
+The metal-os security fixes of 2026-11-18 (`SECURITY.md` in metal-os; commits `8ab56dc` to `1aa9b5d`) changed the kernel's behaviour, not its call numbers or layouts, and touched none of the libraries GlieseWM depends on, so the pin at `6406422` stays correct. The ones a desktop can notice: `CAP_GRANT` is limited for programs (above), `SYSINFO` pages 10 to 14 need `Admin`, and `WAIT_WORD` / `WAKE_WORD` on a device address answer `-5`. By reading the code, GlieseWM uses none of the refused forms: the compositor grants from the screen task, and the clients never grant. This has **not** been checked by booting GlieseWM on the new kernel (`make run-window DESKTOP=../GlieseWM` writes build output in metal-os, so it needs asking first).
