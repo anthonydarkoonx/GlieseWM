@@ -182,7 +182,7 @@ impl Sys for OsSys {
             ("GPU", format!("{} {}x{}", gpu, self.screen.0, self.screen.1)),
             ("RAM", format!("{} MiB / {} MiB", total - free, total)),
             ("STORAGE", format!("{storage} (EROFS + LFS)")),
-            ("IOMMU", if t[1] != 0 { format!("Arm SMMUv3, {} devices confined", t[2]) } else { String::from("none") }),
+            ("IOMMU", if t[1] != 0 { format!("Arm SMMUv3, {} devices confined", t[2]) } else { format!("none ({})", iommu_note()) }),
             ("TASKS", format!("{} running, {} driver restarts", t[3], t[4])),
         ];
         rows.into_iter().map(|(k, v)| (String::from(k), v)).collect()
@@ -481,3 +481,13 @@ fn main(_c: &Ctx) -> u64 {
 }
 
 program!("terminal", main);
+
+/// Why there is no IOMMU on this machine: SYSINFO page 20 (a kernel without the page: a plain "not used by this kernel").
+fn iommu_note() -> String {
+    let r = svc(21, 20, 0, 0, 0, 0);
+    if r[0] as i64 != 0 {
+        return String::from("not used by this kernel");
+    }
+    let bytes: Vec<u8> = r[1..5].iter().flat_map(|w| w.to_le_bytes()).take_while(|&c| c != 0).collect();
+    String::from_utf8_lossy(&bytes).into_owned()
+}
