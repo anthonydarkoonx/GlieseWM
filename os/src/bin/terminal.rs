@@ -166,15 +166,22 @@ impl Sys for OsSys {
     fn facts(&mut self) -> Vec<(String, String)> {
         // SYSINFO page 0: (MIDR, frames, free frames, online cores, ticks a second); page 1: (SMMU on, devices, tasks, restarts)
         let (s, t) = (svc(21, 0, 0, 0, 0, 0), svc(21, 1, 0, 0, 0, 0));
+        // SYSINFO page 19: what the machine's display and storage are called (16 bytes each); a kernel without the page: the QEMU devices
+        let d = svc(21, 19, 0, 0, 0, 0);
+        let name = |a: u64, b: u64, fallback: &str| {
+            let bytes: Vec<u8> = a.to_le_bytes().iter().chain(b.to_le_bytes().iter()).copied().take_while(|&c| c != 0).collect();
+            if d[0] as i64 == 0 && !bytes.is_empty() { String::from_utf8_lossy(&bytes).into_owned() } else { String::from(fallback) }
+        };
+        let (gpu, storage) = (name(d[1], d[2], "virtio-gpu"), name(d[3], d[4], "virtio-blk"));
         let secs = ticks() / s[5].max(1);
         let (total, free) = (s[2] * 4096 >> 20, s[3] * 4096 >> 20);
         let rows = [
             ("KERNEL", String::from("Metallium-OS 0.1 aarch64 microkernel")),
             ("UPTIME", format!("{}h {}m {:02}s", secs / 3600, secs / 60 % 60, secs % 60)),
             ("CPU", format!("{}x {}", s[4], cpu_name(s[1]))),
-            ("GPU", format!("virtio-gpu {}x{} (2D)", self.screen.0, self.screen.1)),
+            ("GPU", format!("{} {}x{}", gpu, self.screen.0, self.screen.1)),
             ("RAM", format!("{} MiB / {} MiB", total - free, total)),
-            ("STORAGE", String::from("virtio-blk (EROFS + LFS)")),
+            ("STORAGE", format!("{storage} (EROFS + LFS)")),
             ("IOMMU", if t[1] != 0 { format!("Arm SMMUv3, {} devices confined", t[2]) } else { String::from("none") }),
             ("TASKS", format!("{} running, {} driver restarts", t[3], t[4])),
         ];
