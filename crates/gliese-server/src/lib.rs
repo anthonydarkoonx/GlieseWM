@@ -2,7 +2,7 @@
 //! drawing the screen. What windows go where is not decided here but by a [`Policy`] (the tiling window manager, `gliese-core`;
 //! [`FloatingPolicy`] until then and in tests).
 //!
-//! The system is behind [`Host`]: shared memory, waking clients and the task table (`gliese-os` on Metal OS, [`sim`] on the
+//! The system is behind [`Host`]: shared memory, waking clients and the task table (`gliese-os` on Metallium-OS, [`sim`] on the
 //! development machine). The owner calls [`Server::request`] for each call on the display endpoint, [`Server::input`] for each input
 //! event, [`Server::tick`] now and then, and [`Server::render`] to bring the screen up to date; `render` returns the rectangles that
 //! changed (to present with `GPU_FLUSH2`).

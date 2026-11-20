@@ -2,7 +2,7 @@
 //! when drawn, so a resize never loses text), a scrollback, and a small part of ANSI: colours (SGR 0, 1, 30-37, 39, 40-47, 49,
 //! 90-97), clearing the screen (`ESC[2J`) and the rest of a line (`ESC[K`), carriage return and backspace.
 //!
-//! Drawing uses metal-gfx's 5x9 bitmap font at twice its size: a cell is [`CELL_W`] x [`CELL_H`] pixels.
+//! Drawing uses metallium-gfx's 5x9 bitmap font at twice its size: a cell is [`CELL_W`] x [`CELL_H`] pixels.
 #![no_std]
 #![forbid(unsafe_code)]
 extern crate alloc;
@@ -11,7 +11,7 @@ pub mod logo;
 
 use alloc::vec;
 use alloc::vec::Vec;
-use metal_gfx::font;
+use metallium_gfx::font;
 
 pub const SCALE: i32 = 2;
 pub const CELL_W: i32 = font::ADVANCE * SCALE;

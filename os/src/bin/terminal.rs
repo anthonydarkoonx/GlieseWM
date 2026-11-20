@@ -3,8 +3,8 @@
 //! screen (`gliese-term`).
 //!
 //! Programs typed at the prompt are started here: the manifest's `permission = spawn` gives this program a spawn capability and
-//! an endpoint factory (metal-os `docs/PROGRAMS.md`, "Starting programs"). Each program gets a console endpoint of its own; a
-//! thread per program serves the console protocol on it (metal-os `docs/ABI.md`, "Console"), because a task can owe only one
+//! an endpoint factory (metallium-os `docs/PROGRAMS.md`, "Starting programs"). Each program gets a console endpoint of its own; a
+//! thread per program serves the console protocol on it (metallium-os `docs/ABI.md`, "Console"), because a task can owe only one
 //! reply at a time and a program waiting to READ must not hold up the other windows.
 #![no_std]
 #![no_main]
@@ -21,11 +21,11 @@ use gliese_os::OsTransport;
 use gliese_proto::{self as p, ev};
 use gliese_shell::{key_byte, Effect, Entry, FsError, Shell, Sys, GLIESE_CONF, HOME};
 use gliese_term::Term;
-use metal_programs::io::ErrorKind;
-use metal_programs::process::{Child, Command};
-use metal_programs::sync::Mutex;
-use metal_programs::thread::{self, JoinHandle};
-use metal_programs::*;
+use metallium_programs::io::ErrorKind;
+use metallium_programs::process::{Child, Command};
+use metallium_programs::sync::Mutex;
+use metallium_programs::thread::{self, JoinHandle};
+use metallium_programs::*;
 
 /// The endpoint factory (`permission = spawn`).
 const FACTORY: u64 = 5;
@@ -43,7 +43,7 @@ struct OsSys {
     screen: (u32, u32),
 }
 
-/// The CPU's name from its MIDR (from metal-os `user/src/info.rs`, the console's `fetch`).
+/// The CPU's name from its MIDR (from metallium-os `user/src/info.rs`, the console's `fetch`).
 fn cpu_name(midr: u64) -> String {
     let (implementer, part) = (midr >> 24 & 0xff, midr >> 4 & 0xfff);
     let name = match (implementer, part) {
@@ -65,7 +65,7 @@ fn cpu_name(midr: u64) -> String {
 }
 
 
-fn fs_err(e: metal_programs::io::Error) -> FsError {
+fn fs_err(e: metallium_programs::io::Error) -> FsError {
     match e.kind {
         ErrorKind::NotFound => FsError::NotFound,
         k => FsError::Other(format!("{k:?}")),
@@ -169,7 +169,7 @@ impl Sys for OsSys {
         let secs = ticks() / s[5].max(1);
         let (total, free) = (s[2] * 4096 >> 20, s[3] * 4096 >> 20);
         let rows = [
-            ("KERNEL", String::from("Metal OS 0.1 aarch64 microkernel")),
+            ("KERNEL", String::from("Metallium-OS 0.1 aarch64 microkernel")),
             ("UPTIME", format!("{}h {}m {:02}s", secs / 3600, secs / 60 % 60, secs % 60)),
             ("CPU", format!("{}x {}", s[4], cpu_name(s[1]))),
             ("GPU", format!("virtio-gpu {}x{} (2D)", self.screen.0, self.screen.1)),

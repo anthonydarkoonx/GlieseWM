@@ -1,4 +1,4 @@
-# GlieseWM: a modular tiling window manager for Metal OS. See PLAN.md.
+# GlieseWM: a modular tiling window manager for Metallium-OS. See PLAN.md.
 [workspace]
 resolver = "2"
 members = ["crates/*"]
@@ -16,7 +16,7 @@ opt-level = 2
 panic = "abort"
 opt-level = "s"
 
-# The same hardening lints as metal-os.
+# The same hardening lints as metallium-os.
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "deny"
 

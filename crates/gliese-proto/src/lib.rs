@@ -2,7 +2,7 @@
 //!
 //! **Requests** are `IPC_CALL`s on the display endpoint, three words each: `w0 = op | window << 8 | arg << 24`, `w1`, `w2`. The
 //! reply's first word is a status (0 or a negative error), the other two are results. The program manager's `MGR_SET_ROLE` (op 97,
-//! sent by metal-os's `progmgr`) uses the same packing.
+//! sent by metallium-os's `progmgr`) uses the same packing.
 //!
 //! **Events** go the other way through the client's *session page*, shared memory the compositor makes for each program: a ring
 //! of fixed-size events the compositor writes and the client reads, then a `WAKE_WORD` on [`session::W_SEQ`]. There is no
@@ -10,7 +10,7 @@
 //!
 //! **Buffers**: each window has two buffers of `w * h` pixels (`0x00RRGGBB`), side by side, the compositor's to make and pay for.
 //! The client draws into the one that is not on screen and commits it. Buffers are cut out of a few large shared objects per
-//! program, *pools*, not one object per window: on Metal OS a task has only 32 capability slots (and 64 mappings), so an object
+//! program, *pools*, not one object per window: on Metallium-OS a task has only 32 capability slots (and 64 mappings), so an object
 //! per window would limit the whole desktop to a dozen windows. A program holds the session page plus one slot per pool.
 #![no_std]
 #![forbid(unsafe_code)]
@@ -60,7 +60,7 @@ pub mod op {
     /// Desktop role: program `w1` (a task of it) has this id (`arg` bytes in the scratch area), for `program:` window rules.
     pub const GL_PROGRAM_NAME: u8 = 52;
 
-    /// 96..=99 belong to the program manager (metal-os `progmgr`).
+    /// 96..=99 belong to the program manager (metallium-os `progmgr`).
     pub const MGR_FIRST: u8 = 96;
     pub const MGR_LAST: u8 = 99;
     /// From the manager only: `arg` = role, `w1` = the task that has it.

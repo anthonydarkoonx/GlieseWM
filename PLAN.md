@@ -1,28 +1,28 @@
 # GlieseWM: plan
 
-A modular tiling window manager and compositor for Metal OS. It has gaps, and you set its keybindings in `gliese.conf`. The
+A modular tiling window manager and compositor for Metallium-OS. It has gaps, and you set its keybindings in `gliese.conf`. The
 ideas come from Hyprland: dwindle and master layouts, `bind = MOD, KEY, dispatcher, arg`, workspaces, submaps,
 `gaps_in`/`gaps_out`, no title bars, and an error bar for a broken config. No Hyprland code is used. Hyprland is
 BSD-3-Clause; only its concepts and config shape are taken, and `PROVENANCE.md` will say so.
 
-Revised 2026-11-18. **Status:** P0 (scaffold), P1 (layouts and gaps), P2 (config), P3 (protocol, client, compositor with the simulator), P4 (the window manager) and P5 (the OS adapter and `metal-desktop-boot`; the metal-os user image links with GlieseWM in it) P6 (`gliesed`; `make disk DESKTOP=…` builds, signs and installs it) and P8 (first boot in QEMU, 2026-11-18: GlieseWM takes the screen at 1024 x 768, the program manager installs and starts `gliesed` and gives it the desktop role, the config loads, Super+Enter reaches the window manager and `gliesed`) are done; see `README.md`. P7 (the terminal) is done too: on QEMU Super+Enter opens tiled terminal windows; built-ins, `fetch` and `argdump` from `/system/bin` run in them through `permission = spawn`. Each running program has its own console endpoint and a thread serving it: a task owes at most one reply at a time (`kernel/src/ipc.rs`), so one loop could not keep a program waiting for input without stalling the others. Config change detection compares the file's contents once a second (the VFS `stat` gives size and kind, no modification time). Not yet done from P4's sections: `drop_hidden_buffers` (§3.2: hidden windows still keep their buffers) and `focusurgent` (nothing marks a window urgent yet).
+Revised 2026-11-18. **Status:** P0 (scaffold), P1 (layouts and gaps), P2 (config), P3 (protocol, client, compositor with the simulator), P4 (the window manager) and P5 (the OS adapter and `metallium-desktop-boot`; the metallium-os user image links with GlieseWM in it) P6 (`gliesed`; `make disk DESKTOP=…` builds, signs and installs it) and P8 (first boot in QEMU, 2026-11-18: GlieseWM takes the screen at 1024 x 768, the program manager installs and starts `gliesed` and gives it the desktop role, the config loads, Super+Enter reaches the window manager and `gliesed`) are done; see `README.md`. P7 (the terminal) is done too: on QEMU Super+Enter opens tiled terminal windows; built-ins, `fetch` and `argdump` from `/system/bin` run in them through `permission = spawn`. Each running program has its own console endpoint and a thread serving it: a task owes at most one reply at a time (`kernel/src/ipc.rs`), so one loop could not keep a program waiting for input without stalling the others. Config change detection compares the file's contents once a second (the VFS `stat` gives size and kind, no modification time). Not yet done from P4's sections: `drop_hidden_buffers` (§3.2: hidden windows still keep their buffers) and `focusurgent` (nothing marks a window urgent yet).
 
 ---
 
 ## 0. Ground rules
 
-- **Nothing is written in `~/Desktop/metal-os`.** GlieseWM plugs in as a desktop repository through the OS's own seam,
-  `make run-window DESKTOP=../GlieseWM` (metal-os `docs/DESKTOP-INTERFACE.md`).
-  - Running that target puts build output (`build/`, `disk.img`) in the metal-os folder, so every QEMU run waits for
+- **Nothing is written in `~/Desktop/metallium-os`.** GlieseWM plugs in as a desktop repository through the OS's own seam,
+  `make run-window DESKTOP=../GlieseWM` (metallium-os `docs/DESKTOP-INTERFACE.md`).
+  - Running that target puts build output (`build/`, `disk.img`) in the metallium-os folder, so every QEMU run waits for
     explicit permission (P8).
-- **Nothing is taken from metal-os-desktop.** No crates, no code, no protocol, no taskbar. It was read only to learn how a
-  desktop plugs into the OS. Every interface GlieseWM relies on is defined in metal-os itself (§1), and is cited from
+- **Nothing is taken from metallium-os-desktop.** No crates, no code, no protocol, no taskbar. It was read only to learn how a
+  desktop plugs into the OS. Every interface GlieseWM relies on is defined in metallium-os itself (§1), and is cited from
   there.
-- **Dependencies:** only metal-os's own libraries, as git dependencies on `github.com/anthonydarkoonx/metal-os` at a pinned
-  revision. These are `metal-gfx` (canvas, rects, regions, fonts), `metal-driver-rt` (system calls, the GPU and input
-  driver protocols), `metal-input` (input event translation) and `metal-programs` (the program runtime, for `os/`). The
+- **Dependencies:** only metallium-os's own libraries, as git dependencies on `github.com/anthonydarkoonx/metallium-os` at a pinned
+  revision. These are `metallium-gfx` (canvas, rects, regions, fonts), `metallium-driver-rt` (system calls, the GPU and input
+  driver protocols), `metallium-input` (input event translation) and `metallium-programs` (the program runtime, for `os/`). The
   OS Makefile already repoints those at its local copies when it builds a desktop.
-- The metal-os rules carry over:
+- The metallium-os rules carry over:
   - `no_std` + `alloc`;
   - `#![forbid(unsafe_code)]` in every crate except the single OS adapter;
   - deny `unsafe_op_in_unsafe_fn` and `clippy::undocumented_unsafe_blocks`;
@@ -31,21 +31,21 @@ Revised 2026-11-18. **Status:** P0 (scaffold), P1 (layouts and gaps), P2 (config
   - no programs beyond what this plan lists (§10 asks about the rest);
   - fast host tests only, unless asked.
 
-## 1. How a desktop plugs into Metal OS (the OS-side contract)
+## 1. How a desktop plugs into Metallium-OS (the OS-side contract)
 
-| Contract | Source in metal-os |
+| Contract | Source in metallium-os |
 |---|---|
-| A crate named `metal-desktop-boot` exporting `pub fn metal_desktop_run(display: u64, gpu: u64, input: u64, framebuffer: u64, fb_handle: usize, manager: u32, power: u64) -> !`. The screen task (role 13) calls it and never gets control back | `docs/DESKTOP-INTERFACE.md`; `Makefile` lines 57-90 |
-| It must call `metal_driver_rt::auto_maps()` first: the screen task is a boot task, and the kernel refuses fixed mapping addresses | same |
+| A crate named `metallium-desktop-boot` exporting `pub fn metallium_desktop_run(display: u64, gpu: u64, input: u64, framebuffer: u64, fb_handle: usize, manager: u32, power: u64) -> !`. The screen task (role 13) calls it and never gets control back | `docs/DESKTOP-INTERFACE.md`; `Makefile` lines 57-90 |
+| It must call `metallium_driver_rt::auto_maps()` first: the screen task is a boot task, and the kernel refuses fixed mapping addresses | same |
 | Built with `-C relocation-model=pic -Zembed-metadata=yes`, fat LTO | `Makefile` |
-| An `os/` Cargo workspace of `no_std` programs (`os/src/bin/*.rs`, using `metal-programs`), `os/packages/<id>.manifest`, and `os/defaults` (`id autostart`). These are signed with the dev key and installed by default | `DESKTOP-INTERFACE.md` |
+| An `os/` Cargo workspace of `no_std` programs (`os/src/bin/*.rs`, using `metallium-programs`), `os/packages/<id>.manifest`, and `os/defaults` (`id autostart`). These are signed with the dev key and installed by default | `DESKTOP-INTERFACE.md` |
 | `role = desktop` in a manifest implies `permission = shell`. Once that program starts, the program manager calls the display endpoint with `w0 = 97 \| 1 << 24` (MGR_SET_ROLE, role 1) and `w1 = task id`, and expects `w0 = 0` back. It is the only display call the OS makes | `programs/src/bin/progmgr.rs:351` |
 | Programs with `permission = display` get a send-only copy of the display endpoint in **slot 2** | `docs/PROGRAMS.md` |
 | A program with `permission = files` sees its own `/data/programdata/<id>` as `/data` | `docs/PROGRAMS.md` |
-| GPU: `GPU_INFO` (32) returns `w \| h << 32`; `GPU_FLUSH2` (34) presents two rectangles, each `x \| y<<16 \| w<<32 \| h<<48` | `libs/metal-driver-rt/src/proto.rs` |
+| GPU: `GPU_INFO` (32) returns `w \| h << 32`; `GPU_FLUSH2` (34) presents two rectangles, each `x \| y<<16 \| w<<32 \| h<<48` | `libs/metallium-driver-rt/src/proto.rs` |
 | Input: `INPUT_POLL` (71) returns up to two event words: `kind` (KEY=1, MOVE=2 absolute 0..32767, BUTTON=3 with 1 left / 2 right / 3 middle, WHEEL), a 16-bit code, and a 32-bit value. Key numbers are PC/AT set 1 (A=30, Super=125/126) | `proto.rs` |
-| Shared memory and wake-ups: `SHM_CREATE` 37, `SHM_INFO` 38, `MEM_MAP` 4, `CAP_GRANT` 5, `CAP_REVOKE` 6, `WAIT_WORD` 32, `WAKE_WORD` 33. Since metal-os `335ff8f` a *program* may `CAP_GRANT` only into its own program, programs it started and its parent (anything else: `-1`); boot-time tasks, which includes the compositor in the screen task, are not restricted, so the compositor still grants session pages and buffers to any client. Client programs must not grant to each other or to the compositor | `docs/ABI.md` |
-| Time, tasks and power: `CLOCK` 34, `SLEEP_US` 44, `SYSINFO` pages 3 (task alive) and 5 (a task's program), `POWER` 42. Since metal-os `1aa9b5d` `SYSINFO` pages 10, 11, 13 and 14 need an `Admin` capability; 3 and 5 stay open | `docs/ABI.md` |
+| Shared memory and wake-ups: `SHM_CREATE` 37, `SHM_INFO` 38, `MEM_MAP` 4, `CAP_GRANT` 5, `CAP_REVOKE` 6, `WAIT_WORD` 32, `WAKE_WORD` 33. Since metallium-os `335ff8f` a *program* may `CAP_GRANT` only into its own program, programs it started and its parent (anything else: `-1`); boot-time tasks, which includes the compositor in the screen task, are not restricted, so the compositor still grants session pages and buffers to any client. Client programs must not grant to each other or to the compositor | `docs/ABI.md` |
+| Time, tasks and power: `CLOCK` 34, `SLEEP_US` 44, `SYSINFO` pages 3 (task alive) and 5 (a task's program), `POWER` 42. Since metallium-os `1aa9b5d` `SYSINFO` pages 10, 11, 13 and 14 need an `Admin` capability; 3 and 5 stay open | `docs/ABI.md` |
 
 So GlieseWM's display protocol is its own. It must only answer op byte 97 the way the manager expects, and it reserves
 op bytes 96..=99 for the manager.
@@ -56,7 +56,7 @@ op bytes 96..=99 for the manager.
   gliese.conf ─ read by `gliesed` (role = desktop) ─ uploaded over the display endpoint
                                                        │
 ┌──────────────── screen task (role 13) ───────────────▼──────────────────┐
-│ metal-desktop-boot ─► gliese-os::run   (OsHost: the only `unsafe`)       │
+│ metallium-desktop-boot ─► gliese-os::run   (OsHost: the only `unsafe`)       │
 │                          │ requests · input words · timers               │
 │   gliese-server: sessions, windows, buffers, configure/commit,           │
 │                  input routing, damage, borders, cursor, error bar       │
@@ -80,7 +80,7 @@ op bytes 96..=99 for the manager.
 | `crates/gliese-server` | The compositor: sessions, windows, buffers, the configure handshake, input routing, rendering. Talks to the system only through a `Host` trait; feature `sim` gives an in-memory host for tests and screenshots | forbidden |
 | `crates/gliese-os` | `OsHost` (the `Host` trait on system calls) and the `run` loop | **the only one** |
 | `crates/gliese-client` | Client library for programs: connect, create a window, draw into the buffer, handle events | forbidden |
-| `metal-desktop-boot` | The contract's entry point: `auto_maps()`, built-in config, `gliese_os::run` | forbidden |
+| `metallium-desktop-boot` | The contract's entry point: `auto_maps()`, built-in config, `gliese_os::run` | forbidden |
 | `os/` | Programs: `gliesed` (no window, `role = desktop`) and `terminal` (§8.1) | forbidden |
 | `crates/gliese-config/gliese.conf` | The default config, compiled in with `include_str!` | — |
 
@@ -93,7 +93,7 @@ op bytes 96..=99 for the manager.
 4. **Core and server are separate:** `gliese-core` drives `gliese-server` only through the narrow `Ctl` interface, so the
    tiling logic can be tested with no compositor at all.
 
-There is no run-time plugin loading: Metal OS has no `.so` mechanism. Modules are chosen with Cargo features.
+There is no run-time plugin loading: Metallium-OS has no `.so` mechanism. Modules are chosen with Cargo features.
 
 ## 3. The compositor (`gliese-server`)
 
@@ -115,7 +115,7 @@ Menus and popups come later.
 **Buffers:**
 - The compositor creates them (`SHM_CREATE`) and pays for them.
 - **Pools (changed in P5):** buffers are cut out of a few large shared objects per program (at most 6, up to 4096 pages each),
-  not one object per window. On Metal OS a task has only 32 capability slots (`kernel/src/cap.rs`, about half of the screen
+  not one object per window. On Metallium-OS a task has only 32 capability slots (`kernel/src/cap.rs`, about half of the screen
   task's are free) and 64 mappings, and every object costs one of each in the compositor *and* in the program. A program
   holds its session page plus one slot per pool, so 40 windows cost about 3 slots instead of 40. Up to 64 windows per program.
 - They are **double-buffered from the start**: tiling resizes windows often, and a single buffer would show half-drawn
@@ -142,7 +142,7 @@ Menus and popups come later.
 **Error bar:** when a config upload fails, the compositor draws a strip at the top of the screen with the first error
 (`gliese.conf:12:7: unknown key 'gap_in'`) until the next good config. There are no notifications to show it otherwise.
 
-**The manager:** op 97 (MGR_SET_ROLE) is honoured only from the `manager` task id passed to `metal_desktop_run`. It marks
+**The manager:** op 97 (MGR_SET_ROLE) is honoured only from the `manager` task id passed to `metallium_desktop_run`. It marks
 that task's program as the desktop role, the only session allowed the privileged ops in §7.
 
 **Dead programs:** each tick checks whether every session's tasks are still alive (`SYSINFO` page 3). A dead program's
@@ -358,11 +358,11 @@ Super+Enter opens a window with a prompt, where you can run commands and edit `g
 - The proper fix is a manifest permission. The program manager gives a program that declares `permission = spawn` an
   endpoint factory in slot 5 and a spawn capability in slot 6. That spawn capability can never give a child more than
   the program has: file access only with `allfiles`, network only with `network`, and no grant right.
-- **Applied in metal-os on 2026-11-18** (uncommitted). The design record is `docs/OS-SPAWN-PERMISSION.md`; the
-  reference is metal-os `docs/PROGRAMS.md`, *Starting programs*. GlieseWM's own code still never writes in metal-os.
+- **Applied in metallium-os on 2026-11-18** (uncommitted). The design record is `docs/OS-SPAWN-PERMISSION.md`; the
+  reference is metallium-os `docs/PROGRAMS.md`, *Starting programs*. GlieseWM's own code still never writes in metallium-os.
 
 **What the terminal does with it:**
-- It starts command-line programs with `metal-programs`' own `Command`, which already looks in slots 5 and 6, finds the
+- It starts command-line programs with `metallium-programs`' own `Command`, which already looks in slots 5 and 6, finds the
   image on `PATH=/system/bin:/data/bin`, and passes the environment.
 - Each child gets a console endpoint the terminal created. The terminal serves the console protocol itself
   (`docs/ABI.md`, "Console"): output words arrive with `IPC_RECV`, and reads are answered from what you type.
@@ -376,7 +376,7 @@ Super+Enter opens a window with a prompt, where you can run commands and edit `g
 - They need no permission of their own. They get file access because the terminal has `allfiles`, and network because it
   has `network`.
 
-**`nano`:** it is **not** a separate program, in the OS console or here. It is metal-os's `metal-edit` library (its
+**`nano`:** it is **not** a separate program, in the OS console or here. It is metallium-os's `metallium-edit` library (its
 `term` module lays the editor out as a character grid; ctrl-O to write, ctrl-X to exit), linked into the terminal, so
 `nano FILE` takes over that terminal window until ctrl-X.
 
@@ -390,8 +390,8 @@ typing a program name says "running programs needs `permission = spawn` (an OS u
 
 | Crate | Purpose |
 |---|---|
-| `crates/gliese-term` | The character grid: cells with colour and reverse video, cursor, scrollback (1000 lines), a small subset of ANSI (SGR colours, clear, cursor moves), and selection later. It draws into the window buffer with `metal-gfx`'s bitmap font and reflows on resize. Pure and host-tested |
-| `crates/gliese-shell` | The shell as pure state behind three traits: `Fs` (the VFS), `Programs` (the control endpoint) and `Runner` (start through `metal-programs` `Command`, serve the child's console, kill, wait). A command that is not a built-in runs through `Runner`. Ctrl-C kills the child. It has the line editor (left/right, home/end, backspace, Ctrl-A/E/U/K/W/L/C), history (↑/↓, 100 lines), `~`, `$GLIESE_CONF`, and quoting with `" '`. Host-tested against a fake file system |
+| `crates/gliese-term` | The character grid: cells with colour and reverse video, cursor, scrollback (1000 lines), a small subset of ANSI (SGR colours, clear, cursor moves), and selection later. It draws into the window buffer with `metallium-gfx`'s bitmap font and reflows on resize. Pure and host-tested |
+| `crates/gliese-shell` | The shell as pure state behind three traits: `Fs` (the VFS), `Programs` (the control endpoint) and `Runner` (start through `metallium-programs` `Command`, serve the child's console, kill, wait). A command that is not a built-in runs through `Runner`. Ctrl-C kills the child. It has the line editor (left/right, home/end, backspace, Ctrl-A/E/U/K/W/L/C), history (↑/↓, 100 lines), `~`, `$GLIESE_CONF`, and quoting with `" '`. Host-tested against a fake file system |
 | `os/src/bin/terminal.rs` | Glue: `gliese-client` windows, one `gliese-term` and one `gliese-shell` per window. Opens a window at start and on each `NEW_WINDOW`; exits when its last window closes |
 
 **Built-ins (v1):** `help`, `clear`, `echo`, `pwd`, `cd`, `ls`, `cat`, `head`, `tail`, `wc`, `grep`, `sort`, `stat`,
@@ -416,26 +416,26 @@ console, which the OS console does not have either.
 - **gliese-core:** scenarios against a fake `Ctl`.
 - **gliese-server:** the `sim` host with real `gliese-client` clients, plus PNG screenshots (`examples/screenshot`
   → `out/*.png`).
-- **Lints:** clippy with the metal-os deny-level lints.
+- **Lints:** clippy with the metallium-os deny-level lints.
 
 | Phase | Work | Done when |
 |---|---|---|
-| **P0 Scaffold** | Workspace, `README.md`, `PROVENANCE.md` (Hyprland credited for ideas; metal-os-desktop named as a read-only reference, nothing taken), pinned metal-os git deps, lint config | `cargo build` on host and for `aarch64-unknown-none-softfloat` |
+| **P0 Scaffold** | Workspace, `README.md`, `PROVENANCE.md` (Hyprland credited for ideas; metallium-os-desktop named as a read-only reference, nothing taken), pinned metallium-os git deps, lint config | `cargo build` on host and for `aarch64-unknown-none-softfloat` |
 | **P1 Layout + gaps** | `gliese-layout`: split function, gaps, dwindle, master | property and golden tests pass |
 | **P2 Config** | `gliese-config`, key names, `crates/gliese-config/gliese.conf` | every rule tested; the default parses |
 | **P3 Protocol + server** | `gliese-proto`, `gliese-client`, `gliese-server` with the `sim` host: sessions, double buffers, configure/commit, input routing, borders, cursor; everything floats | sim tests: a client opens, draws, resizes and closes; a dead client is cleaned up |
 | **P4 Core** | `gliese-core`: workspaces, tiling, floating, binds, submaps, v1 dispatchers, rules, the error bar | sim tests and screenshots: three windows with exact gaps, binds move focus and workspaces, a bad config is rejected and the old one kept, the attention key cannot be bound |
-| **P5 OS adapter** | `gliese-os` (`OsHost`, `run`, op 97), `metal-desktop-boot` | builds for aarch64 with the flags the OS Makefile uses |
+| **P5 OS adapter** | `gliese-os` (`OsHost`, `run`, op 97), `metallium-desktop-boot` | builds for aarch64 with the flags the OS Makefile uses |
 | **P6 Agent** | `gliesed` (+ manifest and defaults): upload, reload, exec | sim: upload → applied; broken upload → error bar |
 | **P7 Terminal** | `gliese-term`, `gliese-shell`, `terminal` program; `NEW_WINDOW`; auto-reload; running programs with `Command` | host tests for the grid and every built-in; sim: Super+Enter 20 times gives 20 terminals; `nano` edits a config, and saving it changes the gaps on screen; with no spawn capability the terminal says so and the built-ins still work. On the machine (P8, after the OS change): `hello` and `ls` from `/system/bin` run in a terminal window, and Ctrl-C stops `burn` |
 | **P7b Polish** | Mouse binds (move, resize, drag-to-swap), per-workspace gaps | sim tests |
-| **P8 Machine** | `make run-window DESKTOP=../GlieseWM` (**writes build output in metal-os; ask first**) | boots; screenshot over QMP |
+| **P8 Machine** | `make run-window DESKTOP=../GlieseWM` (**writes build output in metallium-os; ask first**) | boots; screenshot over QMP |
 | Later | `monocle` and `columns`, scratchpad, popups and menus, animations, a bar program, multiple outputs | |
 
 ## 10. Decisions and open questions
 
 Decided (2026-11-18):
-- Nothing is taken from metal-os-desktop.
+- Nothing is taken from metallium-os-desktop.
 - There is no taskbar.
 - The config lives at `/data/programdata/gliesed/gliese.conf`.
 - Super+Enter opens a terminal, where `nano` edits the config.
@@ -444,7 +444,7 @@ Decided (2026-11-18):
 
 Open:
 1. **Where your CLI programs live.** Will they go in `/system/bin` like the OS's own (built into the OS image, which
-   means metal-os), or be shipped by GlieseWM as packages in its `os/` folder? `/system/bin` and `/data/bin` work as
+   means metallium-os), or be shipped by GlieseWM as packages in its `os/` folder? `/system/bin` and `/data/bin` work as
    soon as the OS change lands. The package route would also need the terminal to read a `.map` package and run the
    program inside it, which is extra work. My recommendation is `/data/bin` (or `/system/bin`) for CLI programs.
 2. **The OS change's QEMU check.** `make test` (or the `qemu-test` part of it) runs the new `progctl` check. It has
@@ -452,4 +452,4 @@ Open:
 
 ## OS hardening after the pinned revision
 
-The metal-os security fixes of 2026-11-18 (`SECURITY.md` in metal-os; commits `8ab56dc` to `1aa9b5d`) changed the kernel's behaviour, not its call numbers or layouts, and touched none of the libraries GlieseWM depends on, so the pin at `6406422` stays correct. The ones a desktop can notice: `CAP_GRANT` is limited for programs (above), `SYSINFO` pages 10 to 14 need `Admin`, and `WAIT_WORD` / `WAKE_WORD` on a device address answer `-5`. By reading the code, GlieseWM uses none of the refused forms: the compositor grants from the screen task, and the clients never grant. Checked by booting on 2026-11-18, with the kernel at metal-os `575ee3c` (headless QEMU, 4 cores, 128 MiB, serial log and QMP screenshots): GlieseWM takes the screen at 1024 x 768, the program manager installs and starts `gliesed` and gives it the desktop role, the config loads, and two Super+Enter presses open two tiled terminal windows, so the compositor's grants to client programs work. No program was terminated and nothing panicked.
+The metallium-os security fixes of 2026-11-18 (`SECURITY.md` in metallium-os; commits `8ab56dc` to `1aa9b5d`) changed the kernel's behaviour, not its call numbers or layouts, and touched none of the libraries GlieseWM depends on, so the pin at `6406422` stays correct. The ones a desktop can notice: `CAP_GRANT` is limited for programs (above), `SYSINFO` pages 10 to 14 need `Admin`, and `WAIT_WORD` / `WAKE_WORD` on a device address answer `-5`. By reading the code, GlieseWM uses none of the refused forms: the compositor grants from the screen task, and the clients never grant. Checked by booting on 2026-11-18, with the kernel at metallium-os `575ee3c` (headless QEMU, 4 cores, 128 MiB, serial log and QMP screenshots): GlieseWM takes the screen at 1024 x 768, the program manager installs and starts `gliesed` and gives it the desktop role, the config loads, and two Super+Enter presses open two tiled terminal windows, so the compositor's grants to client programs work. No program was terminated and nothing panicked.

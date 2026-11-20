@@ -71,7 +71,7 @@ impl Sys for Fake {
         Some((128 << 20, 40 << 20))
     }
     fn facts(&mut self) -> Vec<(String, String)> {
-        [("KERNEL", "Metal OS 0.1 aarch64 microkernel"), ("UPTIME", "0h 1m 02s"), ("CPU", "4x Cortex-A72"), ("GPU", "virtio-gpu 1024x768 (2D)"), ("RAM", "40 MiB / 128 MiB"), ("STORAGE", "virtio-blk (EROFS + LFS)"), ("IOMMU", "Arm SMMUv3, 6 devices confined"), ("TASKS", "31 running, 0 driver restarts")]
+        [("KERNEL", "Metallium-OS 0.1 aarch64 microkernel"), ("UPTIME", "0h 1m 02s"), ("CPU", "4x Cortex-A72"), ("GPU", "virtio-gpu 1024x768 (2D)"), ("RAM", "40 MiB / 128 MiB"), ("STORAGE", "virtio-blk (EROFS + LFS)"), ("IOMMU", "Arm SMMUv3, 6 devices confined"), ("TASKS", "31 running, 0 driver restarts")]
             .iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect()
@@ -191,11 +191,11 @@ fn line_editing_and_history() {
     t.line("echo two");
     t.out();
     // Up twice: "echo one"; then edit it: Home, Ctrl-K … simpler: Left and insert
-    t.sh.key(&mut t.sys, &mut t.term, metal_edit::K_UP);
-    t.sh.key(&mut t.sys, &mut t.term, metal_edit::K_UP);
-    t.sh.key(&mut t.sys, &mut t.term, metal_edit::K_LEFT);
-    t.sh.key(&mut t.sys, &mut t.term, metal_edit::K_LEFT);
-    t.sh.key(&mut t.sys, &mut t.term, metal_edit::K_LEFT);
+    t.sh.key(&mut t.sys, &mut t.term, metallium_edit::K_UP);
+    t.sh.key(&mut t.sys, &mut t.term, metallium_edit::K_UP);
+    t.sh.key(&mut t.sys, &mut t.term, metallium_edit::K_LEFT);
+    t.sh.key(&mut t.sys, &mut t.term, metallium_edit::K_LEFT);
+    t.sh.key(&mut t.sys, &mut t.term, metallium_edit::K_LEFT);
     t.typed("x");
     t.sh.key(&mut t.sys, &mut t.term, b'\n');
     assert_eq!(t.out(), ["xone"]);
@@ -248,8 +248,8 @@ fn keys_become_bytes() {
     assert_eq!(key_byte(46, 2, 0), Some(0x03), "Ctrl-C");
     assert_eq!(key_byte(24, 2, 0), Some(0x0F), "Ctrl-O (nano's write out)");
     assert_eq!(key_byte(45, 2, 0), Some(0x18), "Ctrl-X");
-    assert_eq!(key_byte(103, 0, 0), Some(metal_edit::K_UP));
-    assert_eq!(key_byte(14, 0, 0), Some(metal_edit::K_BACKSPACE));
+    assert_eq!(key_byte(103, 0, 0), Some(metallium_edit::K_UP));
+    assert_eq!(key_byte(14, 0, 0), Some(metallium_edit::K_BACKSPACE));
     assert_eq!(key_byte(125, 8, 0), None, "Super alone");
 }
 
@@ -258,7 +258,7 @@ fn fetch_shows_the_logo_and_the_machine() {
     let mut t = T::new();
     t.line("fetch");
     let text = t.term.text().join("\n");
-    assert!(text.contains("KERNEL   Metal OS 0.1"), "{text}");
+    assert!(text.contains("KERNEL   Metallium-OS 0.1"), "{text}");
     assert!(text.contains("TASKS    31 running"));
     // drawn: the logo's pixels are at the left, the text beside it
     let (w, h) = (1000u32, 400u32);

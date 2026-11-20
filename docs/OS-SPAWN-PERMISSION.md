@@ -1,7 +1,7 @@
 # OS change: `permission = spawn`
 
-**Applied to metal-os on 2026-11-18** (commit `6406422`, merged into `main`), at the user's request. This file is the
-design record; metal-os `docs/PROGRAMS.md`, *Starting programs*, is the reference. Differences from the proposal below: the test
+**Applied to metallium-os on 2026-11-18** (commit `6406422`, merged into `main`), at the user's request. This file is the
+design record; metallium-os `docs/PROGRAMS.md`, *Starting programs*, is the reference. Differences from the proposal below: the test
 manager's budget went from 500 to 800 pages, and `prog info` prints the permission. `mkmap.py` needed no change.
 
 ## Why
@@ -24,7 +24,7 @@ program has itself.
 | 5 | endpoint factory | `R_EP_CREATE` (no grant). Needed for the child's console endpoint (stdin/stdout) |
 | 6 | spawn | `R_SPAWN`, plus `R_SPAWN_FS` **only with `allfiles`**, plus `R_SPAWN_NET` **only with `network`**. No `R_GRANT` |
 
-Slots 5 and 6 are where `metal-programs` already looks (`programs/src/process.rs:12-13`: `FACTORY_SLOT = 5`,
+Slots 5 and 6 are where `metallium-programs` already looks (`programs/src/process.rs:12-13`: `FACTORY_SLOT = 5`,
 `SPAWN_SLOT = 6`). So `Command::new("ls").spawn()` works in such a program with no library change. `Command::start`
 already retries with less (no network, then no files) when the parent may not hand something out
 (`process.rs:254`).
@@ -56,7 +56,7 @@ Change both masks to `0xFFFF`, so the grant right stays. Comment: "grant: progra
 attenuated copy". The manager already holds the admin capability with grant, so this does not change who is trusted.
 It only lets the manager pass on a narrowed copy.
 
-### 2. `libs/metal-map/src/lib.rs`: the permission and the key
+### 2. `libs/metallium-map/src/lib.rs`: the permission and the key
 - In the doc comment (line 29), the list becomes `files | network | display | shell | allfiles | admin | spawn`.
 - Add `pub spawn: bool` and `pub spawn_pages: u32` to the manifest struct (near line 139), with defaults false and 0.
 - `Permission::Spawn`, matched in the permission accessor (near line 156).
@@ -100,14 +100,14 @@ If it checks permission names, add `spawn`.
 - `docs/BOARD-SYNC.md`: log the change (the rule: OS changes in the general tree, logged).
 
 ### 7. Tests (fast host tests, plus the program scenario)
-- `cargo test -p metal-map`: the new parse tests.
+- `cargo test -p metallium-map`: the new parse tests.
 - `progctl` scenario (`programs/src/bin/progctl.rs`, run by `make test`):
   - a test package with `permission = spawn` starts `hello` and reads its output;
   - one without it gets `PermissionDenied`;
   - one with `spawn` but only `files` starts a child that has no file access;
   - stopping the parent ends the child.
 
-  This is a `make test` (QEMU) run, so it needs your go-ahead under the metal-os rules.
+  This is a `make test` (QEMU) run, so it needs your go-ahead under the metallium-os rules.
 
 ## What does not change
 

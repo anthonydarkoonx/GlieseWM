@@ -13,7 +13,7 @@
 //! }
 //! ```
 //!
-//! The system is behind [`Transport`]: `IPC_CALL` on the display endpoint and shared memory on Metal OS (`gliese-os`), the
+//! The system is behind [`Transport`]: `IPC_CALL` on the display endpoint and shared memory on Metallium-OS (`gliese-os`), the
 //! compositor called directly in the simulator (`gliese-server`'s `sim`). Every method takes the transport, so a connection holds no
 //! borrow of it.
 #![no_std]

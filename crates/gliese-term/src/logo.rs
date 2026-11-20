@@ -1,9 +1,9 @@
-//! The `fetch` logo: a chip on a PCB, drawn as pixel lines in integer arithmetic. From metal-os `user/src/logo.rs` (the OS
+//! The `fetch` logo: a chip on a PCB, drawn as pixel lines in integer arithmetic. From metallium-os `user/src/logo.rs` (the OS
 //! console's `fetch`, Apache-2.0 OR MIT), with drawing clipped to the buffer's height as well.
 //!
 //! An IC package with a die inside it, pins on all four sides, and traces that fan out from every pin with a 45 degree bend to a
 //! square pad. One side is described once and rotated by 90 degrees three times. Every pixel write is bounds-checked.
-// (as in metal-os: its helpers take the buffer and the origin with every call)
+// (as in metallium-os: its helpers take the buffer and the origin with every call)
 #![allow(clippy::too_many_arguments)]
 
 /// The logo is a `SIZE` x `SIZE` pixel square.

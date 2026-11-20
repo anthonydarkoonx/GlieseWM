@@ -1,6 +1,6 @@
 //! Key names and modifiers (`bind = SUPER SHIFT, Return, …`).
 //!
-//! Key numbers are what Metal OS's input driver reports (`metal-driver-rt` `proto::input`, `ev::KEY`): the virtio-input numbering
+//! Key numbers are what Metallium-OS's input driver reports (`metallium-driver-rt` `proto::input`, `ev::KEY`): the virtio-input numbering
 //! of the main block (PC/AT set 1 order, A = 30), with the navigation keys at 102..=111 and Super at 125/126. Mouse buttons come as
 //! `ev::BUTTON` with 1 left, 2 right, 3 middle. The table is written from those numbers.
 

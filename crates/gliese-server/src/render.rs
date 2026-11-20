@@ -163,7 +163,7 @@ fn draw_cursor(fb: &mut [u32], stride: i32, screen: &Rect, c: Rect) {
 
 /// Where the error bar goes: across the top, tall enough for one line of the 5x9 font at twice its size.
 pub(crate) fn error_bar(screen_w: i32) -> Rect {
-    Rect::new(0, 0, screen_w, metal_gfx::font::H * 2 + 10)
+    Rect::new(0, 0, screen_w, metallium_gfx::font::H * 2 + 10)
 }
 
 /// A dark red, unlike anything a window is likely to be, with a light line under it.
@@ -178,21 +178,21 @@ fn draw_error_bar(fb: &mut [u32], stride: i32, screen: &Rect, bar: Rect, text: &
     let scale = 2;
     let (mut x, y) = (8, 5);
     for ch in text.bytes() {
-        if x + metal_gfx::font::W * scale > bar.right() - 8 {
+        if x + metallium_gfx::font::W * scale > bar.right() - 8 {
             break;
         }
         // (the font has printable ASCII; anything else shows as '?')
-        let g = metal_gfx::font::glyph(ch).or_else(|| metal_gfx::font::glyph(b'?'));
+        let g = metallium_gfx::font::glyph(ch).or_else(|| metallium_gfx::font::glyph(b'?'));
         if let Some(rows) = g {
             for (gy, row) in rows.iter().enumerate() {
-                for gx in 0..metal_gfx::font::W {
-                    if row & (1 << (metal_gfx::font::W - 1 - gx)) != 0 {
+                for gx in 0..metallium_gfx::font::W {
+                    if row & (1 << (metallium_gfx::font::W - 1 - gx)) != 0 {
                         let r = Rect::new(x + gx * scale, y + gy as i32 * scale, scale, scale);
                         fill(fb, stride, intersect(&r, &bar), BAR_FG);
                     }
                 }
             }
         }
-        x += metal_gfx::font::ADVANCE * scale;
+        x += metallium_gfx::font::ADVANCE * scale;
     }
 }

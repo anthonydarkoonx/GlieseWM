@@ -1,20 +1,20 @@
-//! GlieseWM on Metal OS (`PLAN.md` §2.1): [`OsHost`] (the compositor's `Host` on system calls), [`run`] (the screen task's loop),
+//! GlieseWM on Metallium-OS (`PLAN.md` §2.1): [`OsHost`] (the compositor's `Host` on system calls), [`run`] (the screen task's loop),
 //! and [`OsTransport`] (the client side, for programs).
 //!
 //! This is the one crate with `unsafe`: memory the kernel mapped at an address is turned into slices. That memory is shared with
 //! other programs, which may write to it at any time; the compositor treats everything in it as untrusted input and only reads and
 //! writes whole words, and a program reads what the compositor writes the same way.
 //!
-//! System calls are metal-os's (`docs/ABI.md`); the ones `metal-driver-rt` has no constant for are named here.
+//! System calls are metallium-os's (`docs/ABI.md`); the ones `metallium-driver-rt` has no constant for are named here.
 #![no_std]
 extern crate alloc;
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use gliese_server::{Host, Input, Limits, Policy, Program, Rect, Server, ShmId, Task};
-use metal_driver_rt::proto::gpu::{GPU_FLUSH2, GPU_INFO};
-use metal_driver_rt::proto::input::{ev, INPUT_POLL};
-use metal_driver_rt::{call, mem_map, svc, va, CAP_GRANT, CAP_REVOKE, CLOCK, IPC_RECV, IPC_REPLY, MEM_MAP, SLEEP, SLEEP_US, SYSINFO};
+use metallium_driver_rt::proto::gpu::{GPU_FLUSH2, GPU_INFO};
+use metallium_driver_rt::proto::input::{ev, INPUT_POLL, INPUT_WAIT};
+use metallium_driver_rt::{call, mem_map, svc, va, CAP_GRANT, CAP_REVOKE, CLOCK, IPC_RECV, IPC_REPLY, MEM_MAP, SLEEP, SLEEP_US, SYSINFO};
 
 const WAIT_WORD: u64 = 32;
 const WAKE_WORD: u64 = 33;
@@ -133,7 +133,7 @@ impl Host for OsHost {
     }
 
     fn attention(&mut self) {
-        metal_driver_rt::println!("[gliese] attention key");
+        metallium_driver_rt::println!("[gliese] attention key");
     }
 
     fn power(&mut self, what: u32) -> i64 {
@@ -166,9 +166,11 @@ pub struct Os {
     w: i32,
     idle_since: u64,
     last_tick: u64,
+    /// Input the driver returned while the window manager was waiting for it (`pause`); delivered by the next `step`.
+    waiting: [u64; 3],
 }
 
-/// Limits on Metal OS: every session page and pool is a capability slot of the screen task (32 in all, about half free) and one
+/// Limits on Metallium-OS: every session page and pool is a capability slot of the screen task (32 in all, about half free) and one
 /// of its 64 mappings, so sessions are few; windows are not limited by that (they live in pools).
 pub fn os_limits() -> Limits {
     Limits { sessions: 8, windows_total: 256, buffer_pages: 32 * 256 }
@@ -179,8 +181,8 @@ impl Os {
         let (st, info) = call(cfg.gpu, [GPU_INFO, 0, 0]);
         let (w, h) = if st == 0 && info[0] != 0 { ((info[0] & 0xFFFF_FFFF) as i32, (info[0] >> 32) as i32) } else { (1024, 768) };
         if mem_map(cfg.framebuffer, cfg.fb_handle, true) != 0 {
-            metal_driver_rt::println!("[gliese] cannot map the framebuffer");
-            metal_driver_rt::exit(1);
+            metallium_driver_rt::println!("[gliese] cannot map the framebuffer");
+            metallium_driver_rt::exit(1);
         }
         // SAFETY: the framebuffer capability maps `w * h` words (the display driver made it W * H * 4 bytes) at `va(fb_handle)`,
         // writable, for the life of this task; this is the only slice of it ever made (one `Os` per screen task, never dropped:
@@ -191,8 +193,8 @@ impl Os {
         if let Some(m) = cfg.manager {
             server.set_manager(m);
         }
-        metal_driver_rt::println!("[gliese] up: {w} x {h}");
-        Os { server, host: OsHost::new(cfg.power), cfg, fb, w, idle_since: 0, last_tick: 0 }
+        metallium_driver_rt::println!("[gliese] up: {w} x {h}");
+        Os { server, host: OsHost::new(cfg.power), cfg, fb, w, idle_since: 0, last_tick: 0, waiting: [0; 3] }
     }
 
     /// Serve what is waiting (requests, input, timers) and present what changed. Returns whether anything happened.
@@ -211,9 +213,10 @@ impl Os {
                 svc(IPC_REPLY, reply[0], reply[1], reply[2], 0, 0);
             }
         }
-        // input: up to two events a call, until the driver has none
+        // input: up to two events a call, until the driver has none (first what came in while we waited)
+        let mut held = core::mem::take(&mut self.waiting);
         loop {
-            let (st, rep) = call(self.cfg.input, [INPUT_POLL, 0, 0]);
+            let (st, rep) = if held[0] & 0xFF != 0 { (0, core::mem::take(&mut held)) } else { call(self.cfg.input, [INPUT_POLL, 0, 0]) };
             let n = if st == 0 { (rep[0] & 0xFF) as usize } else { 0 };
             if n == 0 {
                 break;
@@ -249,7 +252,16 @@ impl Os {
         } else if now.saturating_sub(self.idle_since) < 250 {
             svc(SLEEP_US, 2000, 0, 0, 0, 0);
         } else {
-            svc(SLEEP, 1, 0, 0, 0, 0);
+            // Idle for a while: sleep in the input driver instead of on a timer, so a key or a pointer move is seen at once, not at the end of
+            // a tick. Short, because requests from programs wait while we do (they are served by the next step). A driver that does not know
+            // `INPUT_WAIT` (an older system) answers at once with nothing: then the time is slept as before.
+            let t0 = svc(CLOCK, 0, 0, 0, 0, 0)[0];
+            let (st, rep) = call(self.cfg.input, [INPUT_WAIT, 10, 0]);
+            if st == 0 && rep[0] & 0xFF != 0 {
+                self.waiting = rep;
+            } else if svc(CLOCK, 0, 0, 0, 0, 0)[0].saturating_sub(t0) < 2_000_000 {
+                svc(SLEEP, 1, 0, 0, 0, 0);
+            }
         }
     }
 }
@@ -289,7 +301,7 @@ fn present(gpu: u64, rects: &[Rect]) {
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------
-/// The display endpoint's slot in a program with `permission = display` (metal-os `docs/PROGRAMS.md`).
+/// The display endpoint's slot in a program with `permission = display` (metallium-os `docs/PROGRAMS.md`).
 pub const DISPLAY_SLOT: u64 = 2;
 
 /// A program's side: `IPC_CALL` on the display endpoint, and the session page and pools mapped where the kernel chooses.

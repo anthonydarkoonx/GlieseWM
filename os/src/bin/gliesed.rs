@@ -8,9 +8,9 @@ extern crate alloc;
 use alloc::vec::Vec;
 use gliese_agent::{Agent, Env, Start, CONFIG_PATH};
 use gliese_os::OsTransport;
-use metal_programs::*;
+use metallium_programs::*;
 
-/// The program manager's control endpoint, and its ops (metal-os `docs/PROGRAMS.md`, "Control protocol").
+/// The program manager's control endpoint, and its ops (metallium-os `docs/PROGRAMS.md`, "Control protocol").
 const CTL: u64 = 3;
 const OP_START: u64 = 3;
 const OP_STATE: u64 = 5;

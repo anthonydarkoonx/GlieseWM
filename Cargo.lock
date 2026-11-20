@@ -49,7 +49,7 @@ dependencies = [
  "gliese-client",
  "gliese-proto",
  "gliese-server",
- "metal-driver-rt",
+ "metallium-driver-rt",
 ]
 
 [[package]]
@@ -63,7 +63,7 @@ dependencies = [
  "gliese-client",
  "gliese-layout",
  "gliese-proto",
- "metal-gfx",
+ "metallium-gfx",
 ]
 
 [[package]]
@@ -74,36 +74,36 @@ dependencies = [
  "gliese-proto",
  "gliese-server",
  "gliese-term",
- "metal-edit",
+ "metallium-edit",
 ]
 
 [[package]]
 name = "gliese-term"
 version = "0.1.0"
 dependencies = [
- "metal-gfx",
+ "metallium-gfx",
 ]
 
 [[package]]
-name = "metal-desktop-boot"
+name = "metallium-desktop-boot"
 version = "0.1.0"
 dependencies = [
  "gliese-core",
  "gliese-os",
- "metal-driver-rt",
+ "metallium-driver-rt",
 ]
 
 [[package]]
-name = "metal-driver-rt"
+name = "metallium-driver-rt"
 version = "0.1.0"
-source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
+source = "git+https://github.com/anthonydarkoonx/metallium-os?rev=ae59da2#ae59da2cf8621b1f25229fed414b76b3a84cccbb"
 
 [[package]]
-name = "metal-edit"
+name = "metallium-edit"
 version = "0.1.0"
-source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
+source = "git+https://github.com/anthonydarkoonx/metallium-os?rev=ae59da2#ae59da2cf8621b1f25229fed414b76b3a84cccbb"
 
 [[package]]
-name = "metal-gfx"
+name = "metallium-gfx"
 version = "0.1.0"
-source = "git+https://github.com/anthonydarkoonx/metal-os?rev=6406422#640642230d390cc74cad96f8ee8e954e500f5693"
+source = "git+https://github.com/anthonydarkoonx/metallium-os?rev=ae59da2#ae59da2cf8621b1f25229fed414b76b3a84cccbb"

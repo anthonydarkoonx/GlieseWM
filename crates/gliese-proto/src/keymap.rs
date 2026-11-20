@@ -1,4 +1,4 @@
-//! Key numbers to characters (US layout) and the modifier bits KEY events carry. The numbers are Metal OS's input driver's
+//! Key numbers to characters (US layout) and the modifier bits KEY events carry. The numbers are Metallium-OS's input driver's
 //! (virtio-input order; the same table as `gliese-config::keys`).
 
 pub mod mods {

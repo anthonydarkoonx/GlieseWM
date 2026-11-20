@@ -3,13 +3,13 @@ name = "gliese-shell"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "GlieseWM's shell: line editing, history, built-in commands, pipes between them, nano (metal-edit), and running programs through the system"
+description = "GlieseWM's shell: line editing, history, built-in commands, pipes between them, nano (metallium-edit), and running programs through the system"
 
 [dependencies]
 gliese-term = { path = "../gliese-term" }
 gliese-config = { path = "../gliese-config" }
 gliese-proto = { path = "../gliese-proto" }
-metal-edit = { git = "https://github.com/anthonydarkoonx/metal-os", rev = "6406422" }
+metallium-edit = { git = "https://github.com/anthonydarkoonx/metallium-os", rev = "ae59da2" }
 
 [lints]
 workspace = true

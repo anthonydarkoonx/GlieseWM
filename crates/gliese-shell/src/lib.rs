@@ -1,9 +1,9 @@
 //! GlieseWM's shell (`PLAN.md` §8.1): the prompt, line editing and history, built-in commands (and pipes and `>` between them),
-//! `nano` (metal-os's `metal-edit`), and running other programs, which the terminal program starts (it has `permission = spawn`)
+//! `nano` (metallium-os's `metallium-edit`), and running other programs, which the terminal program starts (it has `permission = spawn`)
 //! and connects to this shell.
 //!
 //! Pure state: the file system and the program manager are behind [`Sys`]; output goes into a [`gliese_term::Term`]. Keys are
-//! bytes as Metal OS's keyboard driver numbers them (printable ASCII, control characters, and `metal_edit::K_*` for the others).
+//! bytes as Metallium-OS's keyboard driver numbers them (printable ASCII, control characters, and `metallium_edit::K_*` for the others).
 #![no_std]
 #![forbid(unsafe_code)]
 extern crate alloc;
@@ -15,7 +15,7 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use gliese_term::{Cell, Term, DEFAULT};
-use metal_edit::{Editor, IoError, Mode, Outcome, Storage, K_BACKSPACE, K_DELETE, K_DOWN, K_END, K_HOME, K_LEFT, K_PGDN, K_PGUP, K_RIGHT, K_UP};
+use metallium_edit::{Editor, IoError, Mode, Outcome, Storage, K_BACKSPACE, K_DELETE, K_DOWN, K_END, K_HOME, K_LEFT, K_PGDN, K_PGUP, K_RIGHT, K_UP};
 
 pub use builtins::BUILTINS;
 pub use words::{resolve, split};
@@ -72,7 +72,7 @@ pub trait Sys {
 }
 
 /// A KEY event (key number, modifiers, character) as the byte the shell and the editor take: the character, a control character
-/// for Ctrl+letter, Enter, Tab, Escape, Backspace, or `metal_edit::K_*` for arrows and the like. `None`: a key that means nothing
+/// for Ctrl+letter, Enter, Tab, Escape, Backspace, or `metallium_edit::K_*` for arrows and the like. `None`: a key that means nothing
 /// here (a modifier alone, a function key).
 pub fn key_byte(code: u16, mods: u32, ch: u32) -> Option<u8> {
     use gliese_proto::keymap::{chars, mods as m};
@@ -173,7 +173,7 @@ impl Shell {
         self.cols = cols.max(1);
         self.rows = rows.max(1);
         if let State::Editor(ed) = &mut self.state {
-            let (r, c) = metal_edit::term::text_area(self.rows, self.cols);
+            let (r, c) = metallium_edit::term::text_area(self.rows, self.cols);
             ed.resize(r, c);
         }
     }
@@ -207,7 +207,7 @@ impl Shell {
     /// The editor's screen when `nano` runs: cells (character, inverse) and the cursor (column, row).
     pub fn editor_screen(&self) -> Option<Grid> {
         let State::Editor(ed) = &self.state else { return None };
-        let s = metal_edit::term::draw(ed, self.rows, self.cols);
+        let s = metallium_edit::term::draw(ed, self.rows, self.cols);
         Some((s.cells.iter().map(|r| r.iter().map(|c| (c.ch, c.inverse)).collect()).collect(), s.cursor))
     }
 
@@ -473,7 +473,7 @@ impl Shell {
     fn nano(&mut self, sys: &mut dyn Sys, file: Option<&str>) {
         let mut ed = Editor::new(Mode::Nano);
         ed.cwd = self.cwd.clone();
-        let (r, c) = metal_edit::term::text_area(self.rows, self.cols);
+        let (r, c) = metallium_edit::term::text_area(self.rows, self.cols);
         ed.resize(r, c);
         if let Some(f) = file {
             let path = resolve(&self.cwd, f);

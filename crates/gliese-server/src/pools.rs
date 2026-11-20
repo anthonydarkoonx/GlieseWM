@@ -1,5 +1,5 @@
 //! Buffer pools: a few large shared objects per program that window buffers are cut out of (see `gliese_proto`, "Buffers"). On
-//! Metal OS every object costs a capability slot (32 a task) and a mapping (64), in the compositor and in the program; with pools
+//! Metallium-OS every object costs a capability slot (32 a task) and a mapping (64), in the compositor and in the program; with pools
 //! that is one per pool, not one per window.
 //!
 //! First fit in page units; freed ranges merge with their neighbours; a pool with nothing left in it is destroyed.

@@ -1,4 +1,4 @@
-# Programs Metal OS installs by default when it is built with GlieseWM; `autostart` also starts one when the system comes up.
+# Programs Metallium-OS installs by default when it is built with GlieseWM; `autostart` also starts one when the system comes up.
 gliesed autostart
 # Super+Enter starts it (and asks it for another window while it runs)
 terminal
